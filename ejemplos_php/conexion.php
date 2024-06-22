@@ -1,5 +1,9 @@
 <?php
-include "config.php";
+$user = "datadiego";
+$password = "666808Soundbwoi!";
+$database = "test123";
+$table = "usuarios";
+$host = "192.168.0.31";
 try {
   $db = new PDO("mysql:host=$host;dbname=$database", $user, $password);
   echo "<h2>Usuarios</h2><ol>";
