@@ -15,7 +15,7 @@ Este repositorio contiene el frontend y documentación del proyecto final del pr
 - DuckDNS
 - PHP
 
-Puedes visitar la página en [hhyyppeerrtteexxtt.online](www.hhyyppeerrtteexxtt.online)
+Puedes visitar la página en hhyyppeerrtteexxtt.online
 
 Repositorio en [Github](https://github.com/datadiego/proyecto_prebootcamp)
 
