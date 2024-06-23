@@ -1,0 +1,16 @@
+:root{
+    font-family: monospace;
+}
+
+h2{
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    text-decoration: underline;
+}
+
+pre{
+    background-color: #333;
+    color: hotpink;
+    padding: 1rem;
+    margin: 1rem 0;
+}
