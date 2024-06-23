@@ -611,7 +611,7 @@ INSERT INTO usuarios (nombre, contraseña, puntos) VALUES
 ('usuario5', 'contraseña5', 300);
 ```
 
-Puedes ver un ejemplo de conexión [aquí](wwww.hhyypperrtteexxtt.online/conexion.php).
+Puedes ver un ejemplo de conexión en /conexion.php
 
 ## Nagios
 
