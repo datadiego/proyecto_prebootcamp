@@ -1,4 +1,4 @@
-Puedes visitar hhyyppeerrtteexxtt.online para ver la documentación en formato web.
+Puedes visitar hhyyppeerrtteexxtt.online para ver la documentación en formato web desde la máquina.
 
 Repositorio en [Github](https://github.com/datadiego/proyecto_prebootcamp)
 
