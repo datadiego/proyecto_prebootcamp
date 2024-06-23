@@ -15,6 +15,10 @@ Este repositorio contiene el frontend y documentación del proyecto final del pr
 - DuckDNS
 - PHP
 
+Puedes visitar la página en [hhyyppeerrtteexxtt.online](www.hhyyppeerrtteexxtt.online)
+
+Repositorio en [Github](https://github.com/datadiego/proyecto_prebootcamp)
+
 ## Indice
 
 - [Proyecto final prebootcamp CS 2024](#proyecto-final-prebootcamp-cs-2024)
@@ -40,6 +44,7 @@ Este repositorio contiene el frontend y documentación del proyecto final del pr
   - [DuckDNS](#duckdns)
     - [Creación de dominio](#creación-de-dominio)
     - [Crontab](#crontab)
+    - [Configurar DNS](#configurar-dns)
   - [mySQL](#mysql)
     - [Instalar mySQL](#instalar-mysql)
     - [Configurar autenticacion y privilegios de usuario](#configurar-autenticacion-y-privilegios-de-usuario)
@@ -74,8 +79,14 @@ El proyecto consiste en levantar 4 VMs con los siguientes servicios:
 **ubuntu3**: Servidor Nagios, monitorizando el estado de las demás máquinas.
 
 **ubuntu4**: Servidor de backups con bacula, openVPM para acceder a la red privada.
-    
+
+Estas son las cuatro VMs, accedidas mediante SSH:
+
+![Servicios en las VMs](screenshots/servicios.png)
+
 ## Maquinas virtuales
+
+![Maquinas virtuales](screenshots/vm.png)
 
 ### Creación de máquina virtual
 Descarga la imagen de [ubuntu](https://ubuntu.com/download) en la pagina oficial, en este ejemplo utilizaremos la version 23.10.1
@@ -112,6 +123,10 @@ Para evitar que nuestra maquina cambie de IP, seguimos los siguientes pasos
 - En la sección "Gateway", introduce tu puerta de enlace, generalmente `192.168.0.1`.
 - Selecciona el modo manual en la sección "DNS", introduce `1.1.1.1, 8.8.8.8`
 - Comprueba que tienes conexión a internet haciendo ping.
+
+Puedes comprobar las IPs fijas:
+
+![IP fija en maquinas virtuales](screenshots/vm1.png)
 
 ### Configurar SSH
 Vamos a configurar un servidor SSH que nos permita conectarnos a la maquina de forma remota:
@@ -245,6 +260,8 @@ Añade la siguiente linea:
 0 */12 * * * /usr/bin/certbot renew --quiet
 ```
 
+![Certificacion exitosa](screenshots/certbot.png)
+
 ### Crear web
 Crea una carpeta para la página y da permisos de usuario:
 ```bash
@@ -295,6 +312,10 @@ Añade tu ip con el nombre de dominio que quieras usar:
 ```bash
 <ip>    nombre-de-tu-web.com
 ```
+
+Además, debes abrir los puertos en tu router para poder acceder a la web desde fuera de tu red local:
+
+![Redireccion de puertos](screenshots/redireccion_puertos.png)
 
 ## Samba
 
@@ -354,6 +375,13 @@ testparm
 Para acceder desde windows:
 En el explorador de archivos aparecerá en la sección "Red", si no sale, puedes hacer click en la barra superior y acceder a `\\<IP>\nombre_carpeta_compartida`
 
+Te preguntará tus credenciales:
+
+![](screenshots/smb1.png)
+
+Una vez accedas podras navegar por el directorio:
+
+![](screenshots/smb2.png)
 
 ### Acceso en Ubuntu
 
@@ -395,6 +423,12 @@ Vamos a usar crontab para ejecutar el script cada 5 minutos, usa `crontab -e` pa
 ```
 
 Puedes guardar el cron, y comprobar que el script funciona con `./duck.sh`, devuelve OK en caso positivo, y KO en caso negativo.
+
+### Configurar DNS
+
+Necesitarás apuntar desde tu proveedor de DNS a la ip de duckDNS:
+
+![Configuracion DNS](screenshots/dns.png)
 
 ## mySQL
 
@@ -463,6 +497,8 @@ Una vez has entrado con tu usuario o root, puedes interactuar con el servidor my
 
 Puedes ejecutar cualquier sentencia SQL válida desde el CLI.
 
+![Tablas creadas en mySQL](screenshots/crear_tablas.png)
+
 ### Configuración para conexión remota
 
 Si queremos poder acceder a la base de datos desde la maquina apache debemos darle acceso a la misma, edita el archivo de configuración:
@@ -495,6 +531,8 @@ Habilita el puerto 3306 para permitir la conexion con mySQL.
 sudo ufw allow 3306
 ```
 
+Puedes ver un ejemplo de conexión en el apartado de [PHP](#conectar-con-mysql).
+
 ## PHP
 
 ### Instalar PHP
@@ -525,6 +563,8 @@ phpinfo();
 ```
 
 Si todo ha ido bien, al acceder a `<ip>/info.php` mediante el navegador deberías ver los datos de tu instalación de php.
+
+En la página hay una seccion con varios [ejemplos](wwww.hhyypperrtteexxtt.online/ejemplos_php) de código php.
 
 ### Conectar con mySQL
 
@@ -589,6 +629,8 @@ INSERT INTO usuarios (nombre, contraseña, puntos) VALUES
 ('usuario4', 'contraseña4', 250),
 ('usuario5', 'contraseña5', 300);
 ```
+
+Puedes ver un ejemplo de conexión [aquí](wwww.hhyypperrtteexxtt.online/conexion.php).
 
 ## Nagios
 
@@ -667,11 +709,16 @@ sudo systemctl start nagios
 
 En tu navegador, entra en `http://<ip_servidor>/nagios`
 
+![nagios](screenshots/nagios.png)
+
 ### Configurar autenticación
 
 ```bash
 sudo htpasswd -c /usr/local/nagios/etc/htpasswd.users nagiosadmin
 ```
+
+Añade tu contraseña y ya puedes acceder a nagios con tu usuario y contraseña:
+
 
 ## OVPN
 
@@ -687,9 +734,17 @@ sudo ./openvpn-install.sh
 
 El script te guiará en la instalación, te preguntará por el puerto, protocolo, DNS y nombre de usuario.
 
-### Configuración manual
+Asegúrate de abrir el puerto que has elegido en tu firewall:
 
-Si prefieres crear manualmente el servidor, sigue estos pasos:
+```bash
+sudo ufw allow 1194/udp
+```
+
+Y también deberás abrirlo en tu router para poder acceder desde fuera de tu red local:
+
+![Redireccion de puertos](screenshots/redireccion_puertos.png)
+
+### Configuración manual
 
 En la maquina donde irá alojado el servidor:
 
@@ -809,6 +864,8 @@ Las rutas a los archivos son:
 
 Guarda el archivo, si todo esta correcto, puedes usarlo con un cliente de OpenVPN.
 
+![openVPN lanzado](screenshots/openvpn.png)
+
 ## Rsync
 
 ### Instalacion rsync
@@ -877,3 +934,7 @@ Los datos en crontab se dividen en 6 campos:
 4. Mes (1-12)
 5. Día de la semana (0-7, donde 0 y 7 son domingo)
 6. Comando a ejecutar
+
+En la siguiente captura se puede ver el script en funcionamiento y el cron programado:
+
+![Rsync](screenshots/servicios.png)
