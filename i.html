@@ -1,0 +1,531 @@
+<p>Puedes visitar la página en <a href="www.hhyyppeerrtteexxtt.online">hhyyppeerrtteexxtt.online</a></p>
+<p>Repositorio en <a href="https://github.com/datadiego/proyecto_prebootcamp">Github</a></p>
+<h2 id="indice">Indice</h2>
+<ul>
+<li><a href="#indice">Indice</a></li>
+<li><a href="#objetivo">Objetivo</a></li>
+<li><a href="#maquinas-virtuales">Maquinas virtuales</a>
+<ul>
+<li><a href="#creación-de-máquina-virtual">Creación de máquina virtual</a></li>
+<li><a href="#configuración-básica-ubuntu">Configuración básica Ubuntu</a></li>
+<li><a href="#establecer-ip-estatica">Establecer IP estatica</a></li>
+<li><a href="#configurar-ssh">Configurar SSH</a></li>
+<li><a href="#configurar-ftp">Configurar FTP</a></li>
+</ul></li>
+<li><a href="#apache">Apache</a>
+<ul>
+<li><a href="#instalar-apache2">Instalar Apache2</a></li>
+<li><a href="#editar-archivo-host">Editar archivo host</a></li>
+<li><a href="#añadir-certificado-ssl">Añadir certificado SSL</a></li>
+<li><a href="#crear-web">Crear web</a></li>
+<li><a href="#configuracion-web">Configuracion web</a></li>
+</ul></li>
+<li><a href="#samba">Samba</a>
+<ul>
+<li><a href="#instalar-samba">Instalar samba</a></li>
+<li><a href="#acceso-en-windows">Acceso en windows</a></li>
+<li><a href="#acceso-en-ubuntu">Acceso en Ubuntu</a></li>
+</ul></li>
+<li><a href="#duckdns">DuckDNS</a>
+<ul>
+<li><a href="#creación-de-dominio">Creación de dominio</a></li>
+<li><a href="#crontab">Crontab</a></li>
+<li><a href="#configurar-dns">Configurar DNS</a></li>
+</ul></li>
+<li><a href="#mysql">mySQL</a>
+<ul>
+<li><a href="#instalar-mysql">Instalar mySQL</a></li>
+<li><a href="#configurar-autenticacion-y-privilegios-de-usuario">Configurar autenticacion y privilegios de usuario</a></li>
+<li><a href="#configuración-para-conexión-remota">Configuración para conexión remota</a></li>
+</ul></li>
+<li><a href="#php">PHP</a>
+<ul>
+<li><a href="#instalar-php">Instalar PHP</a></li>
+<li><a href="#conectar-con-mysql">Conectar con mySQL</a></li>
+</ul></li>
+<li><a href="#nagios">Nagios</a>
+<ul>
+<li><a href="#instalación">Instalación</a></li>
+<li><a href="#configuración-en-apache">Configuración en apache</a></li>
+<li><a href="#acceso-a-nagios">Acceso a nagios</a></li>
+<li><a href="#configurar-autenticación">Configurar autenticación</a></li>
+</ul></li>
+<li><a href="#ovpn">OVPN</a>
+<ul>
+<li><a href="#instalación-1">Instalación</a></li>
+<li><a href="#configuración-manual">Configuración manual</a></li>
+<li><a href="#generar-certificado-cliente">Generar certificado cliente</a></li>
+<li><a href="#archivo-de-configuracion-de-ovpn">Archivo de configuracion de OVPN</a></li>
+</ul></li>
+<li><a href="#rsync">Rsync</a>
+<ul>
+<li><a href="#instalacion-rsync">Instalacion rsync</a></li>
+<li><a href="#programar-copias-de-seguridad">Programar copias de seguridad</a></li>
+</ul></li>
+</ul>
+<h2 id="objetivo">Objetivo</h2>
+<p>El proyecto consiste en levantar 4 VMs con los siguientes servicios:</p>
+<figure>
+<img src="maquinas.png" alt="" /><figcaption>vms</figcaption>
+</figure>
+<p><strong>ubuntu1</strong>: Servidor apache2 para servir una página web expuesta de forma pública, con un dominio y certificado SSL. Samba para compartir archivos con las demás máquinas.</p>
+<p><strong>ubuntu2</strong>: Servidor mySQL debe poder ser accedido por apache2, mostrando una query ejecutada correctamente en el navegador.</p>
+<p><strong>ubuntu3</strong>: Servidor Nagios, monitorizando el estado de las demás máquinas.</p>
+<p><strong>ubuntu4</strong>: Servidor de backups con bacula, openVPM para acceder a la red privada.</p>
+<p>Estas son las cuatro VMs, accedidas mediante SSH:</p>
+<figure>
+<img src="screenshots/servicios.png" alt="" /><figcaption>Servicios en las VMs</figcaption>
+</figure>
+<h2 id="maquinas-virtuales">Maquinas virtuales</h2>
+<figure>
+<img src="screenshots/vm.png" alt="" /><figcaption>Maquinas virtuales</figcaption>
+</figure>
+<h3 id="creación-de-máquina-virtual">Creación de máquina virtual</h3>
+<p>Descarga la imagen de <a href="https://ubuntu.com/download">ubuntu</a> en la pagina oficial, en este ejemplo utilizaremos la version 23.10.1 Descarga <a href="https://www.virtualbox.org/">VirtualBox</a> de la página oficial, instalalo y crea una nueva maquina virtual con la imagen que descargaste. Debemos asegurarnos de varias cosas en la configuración:</p>
+<ul>
+<li>En Settings &gt; Network debemos usar el “Adaptador puente” como adaptador de red</li>
+<li>Debemos dar al menos 4 nucleos, de lo contrario el proceso puede ser muy largo</li>
+<li>Daremos al menos 20GB de disco duro</li>
+</ul>
+<p>Una vez Ubuntu está correctamente instalado, procedemos a su configuración</p>
+<h3 id="configuración-básica-ubuntu">Configuración básica Ubuntu</h3>
+<p>Antes de empezar, actualiza tu sistema con</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="fu">sudo</span> apt update </span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true"></a><span class="fu">sudo</span> apt upgrade</span></code></pre></div>
+<p>Instala net-tools</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true"></a><span class="fu">sudo</span> apt install net-tools</span></code></pre></div>
+<h3 id="establecer-ip-estatica">Establecer IP estatica</h3>
+<p>Para evitar que nuestra maquina cambie de IP, seguimos los siguientes pasos</p>
+<ul>
+<li>Vamos a Settings &gt; Network</li>
+<li>En la seccion “Wired” hacemos click en el icono de configuracion.</li>
+<li>En la pestaña IPv4, seleccionamos el método “Manual”.</li>
+<li>En la seccion “Address” puedes configurar tu dirección IP, asegúrate de no tener otro dispositivo con la misma IP en tu red</li>
+<li>Haz <code>ifconfig</code> o <code>ipconfig</code> segun tu sistema para obtener tu mascara de red y puerta de enlace predeterminada.</li>
+<li>En la sección “Netmask” introduce tu máscara de red.</li>
+<li>En la sección “Gateway”, introduce tu puerta de enlace, generalmente <code>192.168.0.1</code>.</li>
+<li>Selecciona el modo manual en la sección “DNS”, introduce <code>1.1.1.1, 8.8.8.8</code></li>
+<li>Comprueba que tienes conexión a internet haciendo ping.</li>
+</ul>
+<p>Puedes comprobar las IPs fijas:</p>
+<figure>
+<img src="screenshots/vm1.png" alt="" /><figcaption>IP fija en maquinas virtuales</figcaption>
+</figure>
+<h3 id="configurar-ssh">Configurar SSH</h3>
+<p>Vamos a configurar un servidor SSH que nos permita conectarnos a la maquina de forma remota:</p>
+<p>Actualiza los repositorios de tu sistema</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true"></a><span class="fu">sudo</span> apt update sudo apt upgrade</span></code></pre></div>
+<p>Descarga OpenSSH</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true"></a><span class="fu">sudo</span> apt install openssh-server</span></code></pre></div>
+<p>Comprueba el estado del servicio</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true"></a><span class="fu">sudo</span> systemctl status ssh</span></code></pre></div>
+<p>Inicia el servicio ssh</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true"></a><span class="fu">sudo</span> systemctl start ssh</span></code></pre></div>
+<p>Para hacer que el servicio se inicie siempre al arrancar la maquina:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true"></a><span class="fu">sudo</span> systemctl enable ssh</span></code></pre></div>
+<p>Para entrar desde otro dispositivo, hazlo con</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true"></a><span class="fu">ssh</span> usuario@ip</span></code></pre></div>
+<h3 id="configurar-ftp">Configurar FTP</h3>
+<p>Vamos a configurar un servidor FTP que nos deje enviar ficheros entre maquinas</p>
+<p>Descarga el servidor vsftpd</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true"></a><span class="fu">sudo</span> apt install vsftpd</span></code></pre></div>
+<p>Configura el servidor</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true"></a><span class="fu">sudo</span> nano /etc/vsftpd.conf</span></code></pre></div>
+<p>Asegurate de cambiar los siguientes parametros:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true"></a><span class="va">local_enable=</span>YES</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true"></a><span class="va">write_enable=</span>YES</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true"></a><span class="va">connect_from_port_20=</span>YES</span></code></pre></div>
+<p>Para comprobar el estado del servicio</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true"></a><span class="fu">sudo</span> systemctl status vsftpd</span></code></pre></div>
+<p>Para iniciar el servicio y hacer que se lance al iniciar la maquina:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true"></a><span class="fu">sudo</span> systemctl start vsftpd</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true"></a><span class="fu">sudo</span> systemctl enable vsftpd</span></code></pre></div>
+<p>Para utilizarlo necesitarás usar un cliente FTP como <a href="%22https://filezilla-project.org/%22">FileZilla</a>, indicar tu nombre de usuario, IP y contraseña.</p>
+<p>Tambien puedes utilizar <code>ftp usuario@host</code> en la terminal.</p>
+<h2 id="apache">Apache</h2>
+<h3 id="instalar-apache2">Instalar Apache2</h3>
+<p>Apache2 se encarga de servir nuestros documentos HTML, para instalarlo y configurarlo haremos lo siguiente:</p>
+<p>Instalamos las dependencias con</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true"></a><span class="fu">sudo</span> apt install apache2</span></code></pre></div>
+<p>Para comprobar el estado del servidor</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true"></a><span class="fu">sudo</span> systemctl status apache2</span></code></pre></div>
+<p>Abre los puertos necesarios:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true"></a><span class="fu">sudo</span> ufw allow apache</span></code></pre></div>
+<p>Comprueba que tu página web está operativa entrando en tu ip desde el navegador o en localhost</p>
+<p>Para editar la página, puedes editar el archivo <code>index.html</code> situado en <code>/var/www/html</code></p>
+<h3 id="editar-archivo-host">Editar archivo host</h3>
+<p>Si quieres poder acceder a la web desde un dominio en lugar de su IP, deberás editar el archivo de host de tu sistema En Ubuntu, el archivo está en <code>/etc/hosts</code>, puedes editarlo mediante <code>sudo nano /etc/hosts</code> En Windows, el archivo está en <code>C:\Windows\System32\drivers\etc\hosts</code>, puedes editarlo en el bloc de notas, aunque tendrás que editarlo fuera de la carpeta original. Deberás editar el archivo hosts siguiendo el siguiente ejemplo:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true"></a><span class="ex">192.168.0.30</span>   nombre-de-tu-web.com</span></code></pre></div>
+<h3 id="añadir-certificado-ssl">Añadir certificado SSL</h3>
+<p>Para poder añadir un certificado SSL a nuestra web podemos utilizar certbot.</p>
+<p>Para instalar certbot y el plugin de apache:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true"></a><span class="fu">sudo</span> apt install certbot python3-certbot-apache</span></code></pre></div>
+<p>Permite que el firewall habilite el HTTPS</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true"></a><span class="fu">sudo</span> ufw allow https</span></code></pre></div>
+<p>Obtener el certificado es fácil, ejecuta</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true"></a><span class="fu">sudo</span> certbot --apache</span></code></pre></div>
+<p>El asistente de instalación te ayudará a configurar el certificado, deberás introducir tu correo electrónico y aceptar los términos de uso.</p>
+<p>Automatiza la renovación del certificado</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true"></a><span class="fu">sudo</span> crontab -e</span></code></pre></div>
+<p>Añade la siguiente linea:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true"></a><span class="ex">0</span> */12 * * * /usr/bin/certbot renew --quiet</span></code></pre></div>
+<figure>
+<img src="screenshots/certbot.png" alt="" /><figcaption>Certificacion exitosa</figcaption>
+</figure>
+<h3 id="crear-web">Crear web</h3>
+<p>Crea una carpeta para la página y da permisos de usuario:</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true"></a><span class="fu">sudo</span> mkdir /var/www/nombre-de-tu-web</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true"></a><span class="fu">sudo</span> chown -R <span class="va">$USER</span>:<span class="va">$USER</span> /var/www/nombre-de-tu-web/</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true"></a><span class="fu">sudo</span> chmod -R 755 /var/www/nombre-de-tu-web/</span></code></pre></div>
+<p>Ya puedes crear archivos y servirlos:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true"></a><span class="fu">nano</span> /var/www/nombre-de-tu-web/index.html</span></code></pre></div>
+<h3 id="configuracion-web">Configuracion web</h3>
+<p>Vamos a editar el siguiente archivo de configuración:</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true"></a><span class="fu">sudo</span> nano /etc/apache2/sites-available/nombre-de-tu-web.conf</span></code></pre></div>
+<p>Una configuración básica sería esta:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true"></a><span class="op">&lt;</span><span class="ex">VirtualHost</span> *:<span class="op">80&gt;</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true"></a>    <span class="ex">ServerAdmin</span> webmaster@nombre-de-tu-web.com</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true"></a>    <span class="ex">ServerName</span> nombre-de-tu-web.com</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true"></a>    <span class="ex">ServerAlias</span> www.nombre-de-tu-web.com</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true"></a>    <span class="ex">DocumentRoot</span> /var/www/nombre-de-tu-web</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true"></a>    <span class="ex">ErrorLog</span> <span class="va">${APACHE_LOG_DIR}</span>/nombre-de-tu-web_error.log</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true"></a>    <span class="ex">CustomLog</span> <span class="va">${APACHE_LOG_DIR}</span>/nombre-de-tu-web_access.log combined</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true"></a><span class="op">&lt;</span>/<span class="ex">VirtualHost</span><span class="op">&gt;</span></span></code></pre></div>
+<p>Aplica los cambios y reinicia el servidor:</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true"></a><span class="fu">sudo</span> a2ensite nombre-de-tu-web.conf</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true"></a><span class="fu">sudo</span> systemctl restart apache2</span></code></pre></div>
+<p>Si aun no tienes expuesto el puerto para poder usar la ip publica, puedes editar tu archivo <code>hosts</code> para usarla en la red privada:</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true"></a><span class="fu">sudo</span> nano /etc/hosts</span></code></pre></div>
+<p>Añade tu ip con el nombre de dominio que quieras usar:</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true"></a><span class="op">&lt;</span><span class="ex">ip</span><span class="op">&gt;</span>    nombre-de-tu-web.com</span></code></pre></div>
+<p>Además, debes abrir los puertos en tu router para poder acceder a la web desde fuera de tu red local:</p>
+<figure>
+<img src="screenshots/redireccion_puertos.png" alt="" /><figcaption>Redireccion de puertos 1</figcaption>
+</figure>
+<h2 id="samba">Samba</h2>
+<h3 id="instalar-samba">Instalar samba</h3>
+<div class="sourceCode" id="cb30"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true"></a><span class="fu">sudo</span> apt install samba</span></code></pre></div>
+<p>Edita la configuración:</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true"></a><span class="fu">sudo</span> nano /etc/samba/smb.conf</span></code></pre></div>
+<p>Para añadir una carpeta como recurso a compartir:</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true"></a>[<span class="ex">shared</span>]</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true"></a>   <span class="ex">path</span> = /var/www/html</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true"></a>   <span class="ex">available</span> = yes</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true"></a>   <span class="ex">valid</span> users = usuario</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true"></a>   <span class="bu">read</span> <span class="va">only</span> <span class="va">=</span> <span class="va">no</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true"></a>   <span class="ex">browsable</span> = yes</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true"></a>   <span class="ex">public</span> = yes</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true"></a>   <span class="ex">writable</span> = yes</span></code></pre></div>
+<p>Asigna permisos:</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true"></a><span class="fu">sudo</span> chown -R usuario:usuario /home/usuario/shared</span></code></pre></div>
+<p>Crea tu usuario, te preguntará que contraseña quieres usar:</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true"></a><span class="fu">sudo</span> smbpasswd -a usuario</span></code></pre></div>
+<p>Dar permisos al firewall:</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true"></a><span class="fu">sudo</span> ufw allow samba</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true"></a><span class="fu">sudo</span> ufw reload</span></code></pre></div>
+<p>Reinicia samba:</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true"></a><span class="fu">sudo</span> systemctl restart smbd</span></code></pre></div>
+<p>Para comprobar que la configuración es correcta:</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true"></a><span class="ex">testparm</span></span></code></pre></div>
+<h3 id="acceso-en-windows">Acceso en windows</h3>
+<p>Para acceder desde windows: En el explorador de archivos aparecerá en la sección “Red”, si no sale, puedes hacer click en la barra superior y acceder a <code>\\&lt;IP&gt;\nombre_carpeta_compartida</code></p>
+<p>Te preguntará tus credenciales:</p>
+<p><img src="screenshots/smb1.png" /></p>
+<p>Una vez accedas podras navegar por el directorio:</p>
+<p><img src="screenshots/smb2.png" /></p>
+<h3 id="acceso-en-ubuntu">Acceso en Ubuntu</h3>
+<p>Para acceder desde Ubuntu: Abre Nautilus, tu explorador de archivos. Ve a “Otras ubicaciones” En la barra inferior, entra en <code>smb://&lt;IP&gt;/recurso_compartido</code></p>
+<p>En ambos te pediran el nombre de usuario y contraseña para acceder.</p>
+<h2 id="duckdns">DuckDNS</h2>
+<h3 id="creación-de-dominio">Creación de dominio</h3>
+<p>Inicia sesión en duckDNS, esto te dará acceso a tu token de identificación. Añade un dominio de duckDNS, deberia detectar automaticamente la ip actual si tienes un servidor corriendo, en caso contrario, ingresa tu ip actual.</p>
+<h3 id="crontab">Crontab</h3>
+<p>DuckDNS utiliza crontab para actualizar la ip de nuestro servidor, tambien necesitarás curl, en caso de no tenerlos:</p>
+<p>Crea una carpeta, crea un archivo <code>duck.sh</code> en su interior:</p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true"></a><span class="bu">echo</span> url=<span class="st">&quot;https://www.duckdns.org/update?domains=&lt;DOMINIO&gt;&amp;token=&lt;TOKEN&gt;&amp;ip=&quot;</span> <span class="kw">|</span> <span class="ex">curl</span> -k -o ~/duckdns/duck.log -K -</span></code></pre></div>
+<p>Sustituye dominio y token por los que tengas en duckDNS.</p>
+<p>Otorga permisos de ejecucion:</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true"></a><span class="fu">chmod</span> 700 duck.sh</span></code></pre></div>
+<p>Vamos a usar crontab para ejecutar el script cada 5 minutos, usa <code>crontab -e</code> para ejecutar crontab, elige un editor de texto y pega la siguiente configuracion:</p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true"></a><span class="ex">*/5</span> * * * * ~/duckdns/duck.sh <span class="op">&gt;</span>/dev/null <span class="op">2&gt;&amp;1</span></span></code></pre></div>
+<p>Puedes guardar el cron, y comprobar que el script funciona con <code>./duck.sh</code>, devuelve OK en caso positivo, y KO en caso negativo.</p>
+<h3 id="configurar-dns">Configurar DNS</h3>
+<p>Necesitarás apuntar desde tu proveedor de DNS a la ip de duckDNS:</p>
+<figure>
+<img src="screenshots/dns.png" alt="" /><figcaption>Configuracion DNS</figcaption>
+</figure>
+<h2 id="mysql">mySQL</h2>
+<h3 id="instalar-mysql">Instalar mySQL</h3>
+<p>Instala el servidor mySQL</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true"></a><span class="fu">sudo</span> apt install mysql-server</span></code></pre></div>
+<p>Ejecuta el script de seguridad para completar la instalación:</p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true"></a><span class="fu">sudo</span> mysql_secure_installation</span></code></pre></div>
+<p>Esto iniciara el proceso de configuracion para segurar ciertos aspectos de mysql: - <strong>Validacion de contraseñas:</strong> permite establecer una validacion de contraseñas para usuarios de la base datos, estableciento varios niveles de seguridad.</p>
+<ul>
+<li><p><strong>Eliminar usuarios anonimos</strong>, solo deberian usarse durante el desarrollo, pero nunca en produccion.</p></li>
+<li><p><strong>Desactivar acceso a root remoto</strong>, no permitirá que nos podamos conectar directamente al servidor mysql, deberemos hacerlo desde localhost siempre.</p></li>
+<li><p><strong>Borrar</strong> base de datos de test.</p></li>
+<li><p><strong>Recargar privilegios</strong> para que los cambios se vean reflejados.</p></li>
+</ul>
+<p>Una vez finalizado mySQL está listo para lanzarlo con <code>sudo mysql</code>.</p>
+<h3 id="configurar-autenticacion-y-privilegios-de-usuario">Configurar autenticacion y privilegios de usuario</h3>
+<p>Podemos ver la configuración actual de permisos de los usuarios:</p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true"></a><span class="kw">SELECT</span> <span class="fu">user</span>,authentication_string,plugin,host <span class="kw">FROM</span> mysql.<span class="fu">user</span>;</span></code></pre></div>
+<p>Y editarla mediante:</p>
+<div class="sourceCode" id="cb44"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true"></a><span class="kw">ALTER</span> <span class="fu">USER</span> <span class="st">&#39;root&#39;</span>@<span class="st">&#39;localhost&#39;</span> <span class="kw">IDENTIFIED</span> <span class="kw">WITH</span> caching_sha2_password <span class="kw">BY</span> <span class="st">&#39;password&#39;</span>;</span></code></pre></div>
+<p>Por ultimo, no te olvides de volver a cargar la tabla de permisos de usuario:</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true"></a><span class="kw">FLUSH</span> <span class="kw">PRIVILEGES</span>;</span></code></pre></div>
+<p>Podemos iniciar sesion sql usando <code>sudo mysql -p</code> si queremos acceder como root o <code>sudo mysql -u username -p</code> para usar un usuario.</p>
+<p>Crear un usuario:</p>
+<div class="sourceCode" id="cb46"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true"></a><span class="kw">CREATE</span> <span class="fu">USER</span> <span class="st">&#39;username&#39;</span>@<span class="st">&#39;localhost&#39;</span> <span class="kw">IDENTIFIED</span> <span class="kw">BY</span> <span class="st">&#39;password&#39;</span>;</span></code></pre></div>
+<p>Dar privilegios, de lo contrario no podremos crear o editar tablas:</p>
+<div class="sourceCode" id="cb47"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true"></a><span class="kw">GRANT</span> <span class="kw">ALL</span> <span class="kw">PRIVILEGES</span> <span class="kw">ON</span> <span class="op">*</span>.<span class="op">*</span> <span class="kw">TO</span> <span class="st">&#39;username&#39;</span>@<span class="st">&#39;localhost&#39;</span> <span class="kw">WITH</span> <span class="kw">GRANT</span> <span class="kw">OPTION</span>;</span></code></pre></div>
+<p>Una vez has entrado con tu usuario o root, puedes interactuar con el servidor mysql:</p>
+<p><code>status</code>: muestra información sobre la sesión de mysql y el servidor. <code>source</code>: ejecuta un archivo sql. <code>create database &lt;nombre&gt;</code>: crea una base de datos. <code>use &lt;database&gt;</code>: accede a una base de datos.</p>
+<p>Puedes ejecutar cualquier sentencia SQL válida desde el CLI.</p>
+<figure>
+<img src="screenshots/crear_tablas.png" alt="" /><figcaption>Tablas creadas en mySQL</figcaption>
+</figure>
+<h3 id="configuración-para-conexión-remota">Configuración para conexión remota</h3>
+<p>Si queremos poder acceder a la base de datos desde la maquina apache debemos darle acceso a la misma, edita el archivo de configuración:</p>
+<div class="sourceCode" id="cb48"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true"></a><span class="fu">sudo</span> nano /etc/mysql/mysql.conf.d/mysqld.cnf</span></code></pre></div>
+<p>Añade la IP de la máquina a la que quieras permitir el acceso o utiliza <code>0.0.0.0</code> para permitir cualquiera:</p>
+<div class="sourceCode" id="cb49"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true"></a><span class="ex">bind-address</span> = 0.0.0.0</span></code></pre></div>
+<p>Reinicia el servicio:</p>
+<div class="sourceCode" id="cb50"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true"></a><span class="fu">sudo</span> systemctl restart mysql</span></code></pre></div>
+<p>En tu máquina con apache, instala el cliente de mySQL:</p>
+<div class="sourceCode" id="cb51"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true"></a><span class="fu">sudo</span> apt-get install mysql-client</span></code></pre></div>
+<p>Habilita el puerto 3306 para permitir la conexion con mySQL.</p>
+<div class="sourceCode" id="cb52"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true"></a><span class="fu">sudo</span> ufw allow 3306</span></code></pre></div>
+<p>Puedes ver un ejemplo de conexión en el apartado de <a href="#conectar-con-mysql">PHP</a>.</p>
+<h2 id="php">PHP</h2>
+<h3 id="instalar-php">Instalar PHP</h3>
+<p>Instala php y la libreria para apache:</p>
+<div class="sourceCode" id="cb53"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true"></a><span class="fu">sudo</span> apt install php libapache2-mod-php</span></code></pre></div>
+<p>Reinicia el servicio y configuralo para iniciarse automaticamente:</p>
+<div class="sourceCode" id="cb54"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true"></a><span class="fu">sudo</span> systemctl restart apache2</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true"></a><span class="fu">sudo</span> systemctl enable apache2</span></code></pre></div>
+<p>Para comprobar que todo va correctamente:</p>
+<div class="sourceCode" id="cb55"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true"></a><span class="fu">sudo</span> nano /var/www/html/info.php</span></code></pre></div>
+<p>Escribimos lo siguiente:</p>
+<div class="sourceCode" id="cb56"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true"></a><span class="kw">&lt;?php</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true"></a><span class="fu">phpinfo</span><span class="ot">();</span></span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true"></a><span class="kw">?&gt;</span></span></code></pre></div>
+<p>Si todo ha ido bien, al acceder a <code>&lt;ip&gt;/info.php</code> mediante el navegador deberías ver los datos de tu instalación de php.</p>
+<p>En la página hay una seccion con varios <a href="wwww.hhyypperrtteexxtt.online/ejemplos_php">ejemplos</a> de código php.</p>
+<h3 id="conectar-con-mysql">Conectar con mySQL</h3>
+<p>Asegúrate de que ambas maquinas pueden hacerse ping.</p>
+<p>Instala las librerias y dependencias necesarias:</p>
+<div class="sourceCode" id="cb57"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true"></a><span class="fu">sudo</span> apt-get install mysql-client</span></code></pre></div>
+<p>Asegúrate de abrir el puerto 3306 para el servidor mySQL:</p>
+<div class="sourceCode" id="cb58"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true"></a><span class="ex">ufw</span> allow 3306</span></code></pre></div>
+<p>Prueba la conexion con mySQL:</p>
+<div class="sourceCode" id="cb59"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true"></a><span class="ex">mysql</span> -u usuario -h ip_del_servidor_mysql -p</span></code></pre></div>
+<p>Si obtienes un error, asegúrate de seguir los pasos para <a href="#configurar-autenticacion-y-privilegios-de-usuario">autenticar y dar privilegios</a> a tu usuario.</p>
+<p>Si ya tienes un usuario con los permisos necesarios y una base de datos con una tabla y datos, puedes crear el siguiente script para probar la conexión mediante php:</p>
+<div class="sourceCode" id="cb60"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true"></a><span class="kw">&lt;?php</span></span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true"></a><span class="kw">$user</span> = <span class="st">&quot;username&quot;</span><span class="ot">;</span></span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true"></a><span class="kw">$password</span> = <span class="st">&quot;password&quot;</span><span class="ot">;</span></span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true"></a><span class="kw">$database</span> = <span class="st">&quot;test123&quot;</span><span class="ot">;</span></span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true"></a><span class="kw">$table</span> = <span class="st">&quot;usuarios&quot;</span><span class="ot">;</span></span>
+<span id="cb60-6"><a href="#cb60-6" aria-hidden="true"></a><span class="kw">$host</span> = <span class="st">&quot;IP con el servidor mySQL&quot;</span><span class="ot">;</span></span>
+<span id="cb60-7"><a href="#cb60-7" aria-hidden="true"></a><span class="kw">try</span> {</span>
+<span id="cb60-8"><a href="#cb60-8" aria-hidden="true"></a>  <span class="kw">$db</span> = <span class="kw">new</span> <span class="kw">PDO</span><span class="ot">(</span><span class="st">&quot;mysql:host=</span><span class="kw">$host</span><span class="st">;dbname=</span><span class="kw">$database</span><span class="st">&quot;</span><span class="ot">,</span> <span class="kw">$user</span><span class="ot">,</span> <span class="kw">$password</span><span class="ot">);</span></span>
+<span id="cb60-9"><a href="#cb60-9" aria-hidden="true"></a>  <span class="kw">echo</span> <span class="st">&quot;&lt;h2&gt;Usuarios&lt;/h2&gt;&lt;ol&gt;&quot;</span><span class="ot">;</span></span>
+<span id="cb60-10"><a href="#cb60-10" aria-hidden="true"></a>  <span class="kw">foreach</span><span class="ot">(</span><span class="kw">$db</span>-&gt;query<span class="ot">(</span><span class="st">&quot;SELECT nombre FROM </span><span class="kw">$table</span><span class="st">&quot;</span><span class="ot">)</span> <span class="kw">as</span> <span class="kw">$row</span><span class="ot">)</span> {</span>
+<span id="cb60-11"><a href="#cb60-11" aria-hidden="true"></a>    <span class="kw">echo</span> <span class="st">&quot;&lt;li&gt;&quot;</span> . <span class="kw">$row</span><span class="ot">[</span><span class="st">&#39;nombre&#39;</span><span class="ot">]</span> . <span class="st">&quot;&lt;/li&gt;&quot;</span><span class="ot">;</span></span>
+<span id="cb60-12"><a href="#cb60-12" aria-hidden="true"></a>  }</span>
+<span id="cb60-13"><a href="#cb60-13" aria-hidden="true"></a>  <span class="kw">echo</span> <span class="st">&quot;&lt;/ol&gt;&quot;</span><span class="ot">;</span></span>
+<span id="cb60-14"><a href="#cb60-14" aria-hidden="true"></a>} <span class="kw">catch</span> <span class="ot">(</span><span class="kw">PDOException</span> <span class="kw">$e</span><span class="ot">)</span> {</span>
+<span id="cb60-15"><a href="#cb60-15" aria-hidden="true"></a>    <span class="kw">print</span> <span class="st">&quot;Error!: &quot;</span> . <span class="kw">$e</span>-&gt;getMessage<span class="ot">()</span> . <span class="st">&quot;&lt;br/&gt;&quot;</span><span class="ot">;</span></span>
+<span id="cb60-16"><a href="#cb60-16" aria-hidden="true"></a>    <span class="kw">die</span><span class="ot">();</span></span>
+<span id="cb60-17"><a href="#cb60-17" aria-hidden="true"></a>}</span>
+<span id="cb60-18"><a href="#cb60-18" aria-hidden="true"></a><span class="kw">?&gt;</span></span></code></pre></div>
+<p>El anterior script lee y muestra los nombres de una tabla creada mediante la siguiente sentencia SQL:</p>
+<div class="sourceCode" id="cb61"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> usuarios (</span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true"></a>    <span class="kw">id</span> <span class="dt">INT</span> AUTO_INCREMENT <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true"></a>    nombre <span class="dt">VARCHAR</span>(<span class="dv">50</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true"></a>    contraseña <span class="dt">VARCHAR</span>(<span class="dv">255</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true"></a>    puntos <span class="dt">INT</span> <span class="kw">DEFAULT</span> <span class="dv">0</span></span>
+<span id="cb61-6"><a href="#cb61-6" aria-hidden="true"></a>);</span>
+<span id="cb61-7"><a href="#cb61-7" aria-hidden="true"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> usuarios (nombre, contraseña, puntos) <span class="kw">VALUES</span></span>
+<span id="cb61-8"><a href="#cb61-8" aria-hidden="true"></a>(<span class="st">&#39;admin&#39;</span>, <span class="st">&#39;12341234&#39;</span>, <span class="dv">100</span>),</span>
+<span id="cb61-9"><a href="#cb61-9" aria-hidden="true"></a>(<span class="st">&#39;usuario2&#39;</span>, <span class="st">&#39;contraseña2&#39;</span>, <span class="dv">150</span>),</span>
+<span id="cb61-10"><a href="#cb61-10" aria-hidden="true"></a>(<span class="st">&#39;usuario3&#39;</span>, <span class="st">&#39;contraseña3&#39;</span>, <span class="dv">200</span>),</span>
+<span id="cb61-11"><a href="#cb61-11" aria-hidden="true"></a>(<span class="st">&#39;usuario4&#39;</span>, <span class="st">&#39;contraseña4&#39;</span>, <span class="dv">250</span>),</span>
+<span id="cb61-12"><a href="#cb61-12" aria-hidden="true"></a>(<span class="st">&#39;usuario5&#39;</span>, <span class="st">&#39;contraseña5&#39;</span>, <span class="dv">300</span>);</span></code></pre></div>
+<p>Puedes ver un ejemplo de conexión <a href="wwww.hhyypperrtteexxtt.online/conexion.php">aquí</a>.</p>
+<h2 id="nagios">Nagios</h2>
+<h3 id="instalación">Instalación</h3>
+<p>Instalamos los paquetes necesarios: <code>sudo apt install -y build-essential libgd-dev libssl-dev apache2 php libapache2-mod-php libperl-dev libpq-dev libmysqlclient-dev</code></p>
+<p>Creamos un usuario y grupo “nagios”, añade un usuario adicional “nagcmd” para comandos externos:</p>
+<div class="sourceCode" id="cb62"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true"></a><span class="fu">sudo</span> useradd nagios</span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true"></a><span class="fu">sudo</span> groupadd nagcmd</span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true"></a><span class="fu">sudo</span> usermod -a -G nagcmd nagios</span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true"></a><span class="fu">sudo</span> usermod -a -G nagcmd www-data</span></code></pre></div>
+<p>Descarga nagios core:</p>
+<div class="sourceCode" id="cb63"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true"></a><span class="bu">cd</span> /tmp</span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true"></a><span class="fu">wget</span> https://github.com/NagiosEnterprises/nagioscore/releases/download/nagios-4.4.9/nagios-4.4.9.tar.gz</span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true"></a><span class="fu">tar</span> -xzf nagios-4.4.9.tar.gz</span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true"></a><span class="bu">cd</span> nagios-4.4.9</span></code></pre></div>
+<p>Compila e instala:</p>
+<div class="sourceCode" id="cb64"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true"></a><span class="ex">./configure</span> --with-command-group=nagcmd</span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true"></a><span class="fu">make</span> all</span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true"></a><span class="fu">sudo</span> make install</span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true"></a><span class="fu">sudo</span> make install-commandmode</span>
+<span id="cb64-5"><a href="#cb64-5" aria-hidden="true"></a><span class="fu">sudo</span> make install-init</span>
+<span id="cb64-6"><a href="#cb64-6" aria-hidden="true"></a><span class="fu">sudo</span> make install-config</span>
+<span id="cb64-7"><a href="#cb64-7" aria-hidden="true"></a><span class="fu">sudo</span> make install-webconf</span></code></pre></div>
+<p>Configura tu correo electronico para las notificaciones:</p>
+<div class="sourceCode" id="cb65"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true"></a><span class="fu">sudo</span> nano /usr/local/nagios/etc/objects/contacts.cfg</span></code></pre></div>
+<p>Añade tu email en la linea del usuario “nagiosadmin”.</p>
+<h3 id="configuración-en-apache">Configuración en apache</h3>
+<p>Ve a tu maquina con apache, reinicia el servicio:</p>
+<div class="sourceCode" id="cb66"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true"></a><span class="fu">sudo</span> a2enmod rewrite</span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true"></a><span class="fu">sudo</span> a2enmod cgi</span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true"></a><span class="fu">sudo</span> systemctl restart apache2</span></code></pre></div>
+<p>Instala los plugins de nagios:</p>
+<div class="sourceCode" id="cb67"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true"></a><span class="bu">cd</span> /tmp</span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true"></a><span class="fu">wget</span> https://nagios-plugins.org/download/nagios-plugins-2.3.3.tar.gz</span>
+<span id="cb67-3"><a href="#cb67-3" aria-hidden="true"></a><span class="fu">tar</span> -xzf nagios-plugins-2.3.3.tar.gz</span>
+<span id="cb67-4"><a href="#cb67-4" aria-hidden="true"></a><span class="bu">cd</span> nagios-plugins-2.3.3</span>
+<span id="cb67-5"><a href="#cb67-5" aria-hidden="true"></a><span class="ex">./configure</span> --with-nagios-user=nagios --with-nagios-group=nagios</span>
+<span id="cb67-6"><a href="#cb67-6" aria-hidden="true"></a><span class="fu">make</span></span>
+<span id="cb67-7"><a href="#cb67-7" aria-hidden="true"></a><span class="fu">sudo</span> make install</span></code></pre></div>
+<p>Inicia el sistema y configuralo para arrancarlo automaticamente con la maquina:</p>
+<div class="sourceCode" id="cb68"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true"></a><span class="fu">sudo</span> systemctl enable nagios</span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true"></a><span class="fu">sudo</span> systemctl start nagios</span></code></pre></div>
+<h3 id="acceso-a-nagios">Acceso a nagios</h3>
+<p>En tu navegador, entra en <code>http://&lt;ip_servidor&gt;/nagios</code>.</p>
+<h3 id="configurar-autenticación">Configurar autenticación</h3>
+<p><img src="screenshots/nagios.png" /></p>
+<p>Añade tu contraseña para el usuario “nagiosadmin”:</p>
+<div class="sourceCode" id="cb69"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true"></a><span class="fu">sudo</span> htpasswd -c /usr/local/nagios/etc/htpasswd.users nagiosadmin</span></code></pre></div>
+<h2 id="ovpn">OVPN</h2>
+<h3 id="instalación-1">Instalación</h3>
+<p>Podemos usar <a href="https://github.com/angristan/openvpn-install">este script</a> para generar un servidor OpenVPN.</p>
+<div class="sourceCode" id="cb70"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true"></a><span class="fu">wget</span> https://raw.githubusercontent.com/angristan/openvpn-install/master/openvpn-install.sh</span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true"></a><span class="fu">chmod</span> +x openvpn-install.sh</span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true"></a><span class="fu">sudo</span> ./openvpn-install.sh</span></code></pre></div>
+<p>El script te guiará en la instalación, te preguntará por el puerto, protocolo, DNS y nombre de usuario.</p>
+<p>Asegúrate de abrir el puerto que has elegido en tu firewall:</p>
+<div class="sourceCode" id="cb71"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true"></a><span class="fu">sudo</span> ufw allow 1194/udp</span></code></pre></div>
+<p>Y también deberás abrirlo en tu router para poder acceder desde fuera de tu red local como se muestra en la <a href="#configurar-apache">configuración de apache</a>.</p>
+<h3 id="configuración-manual">Configuración manual</h3>
+<p>En la maquina donde irá alojado el servidor:</p>
+<div class="sourceCode" id="cb72"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true"></a><span class="fu">sudo</span> apt install openvpn easy-rsa</span></code></pre></div>
+<p>Crea un directorio para easy-rsa:</p>
+<div class="sourceCode" id="cb73"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true"></a><span class="ex">make-cadir</span> ~/openvpn-ca</span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true"></a><span class="bu">cd</span> ~/openvpn-ca</span></code></pre></div>
+<p>El archivo de configuracion se encuentra en <code>~/openvpn-ca/vars</code></p>
+<p>Inicializa el PKI:</p>
+<div class="sourceCode" id="cb74"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true"></a><span class="ex">./easyrsa</span> init-pki</span></code></pre></div>
+<p>Construir la CA:</p>
+<div class="sourceCode" id="cb75"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true"></a><span class="ex">./easyrsa</span> build-ca</span></code></pre></div>
+<p>Te preguntará una contraseña y usuario.</p>
+<p>Generar certificados y claves:</p>
+<div class="sourceCode" id="cb76"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true"></a><span class="ex">./easyrsa</span> gen-req server nopass</span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true"></a><span class="ex">./easyrsa</span> sign-req server server</span></code></pre></div>
+<p>Te preguntará un usuario y contraseña</p>
+<p>Genera el parametro Diffie-Hellman:</p>
+<div class="sourceCode" id="cb77"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true"></a><span class="ex">./easyrsa</span> gen-dh</span></code></pre></div>
+<p>Genera el archivo HMAC</p>
+<div class="sourceCode" id="cb78"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true"></a><span class="ex">openvpn</span> --genkey --secret pki/ta.key</span></code></pre></div>
+<h3 id="generar-certificado-cliente">Generar certificado cliente</h3>
+<p>Para generar el certificado de un cliente:</p>
+<div class="sourceCode" id="cb79"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true"></a><span class="ex">./easyrsa</span> gen-req keepcoding nopass</span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true"></a><span class="ex">./easyrsa</span> sign-req client keepcoding</span></code></pre></div>
+<p>Te preguntará por usuario y contraseña para crear y firmarlo.</p>
+<h3 id="archivo-de-configuracion-de-ovpn">Archivo de configuracion de OVPN</h3>
+<p>Para crear una configuración solo necesitamos crear un archivo <code>.ovpn</code>:</p>
+<pre><code>nano keepcoding.ovpn</code></pre>
+<p>Esta plantilla sirve para configurarlo:</p>
+<pre><code>client
+dev tun
+proto udp
+remote &lt;IP de tu servidor&gt; 1194
+resolv-retry infinite
+nobind
+user nobody
+group nogroup
+persist-key
+persist-tun
+remote-cert-tls server
+cipher AES-256-CBC
+auth SHA256
+key-direction 1
+verb 3
+
+&lt;ca&gt;
+-----BEGIN CERTIFICATE-----
+(contenido de ca.crt)
+-----END CERTIFICATE-----
+&lt;/ca&gt;
+&lt;cert&gt;
+-----BEGIN CERTIFICATE-----
+(contenido de keepcoding.crt)
+-----END CERTIFICATE-----
+&lt;/cert&gt;
+&lt;key&gt;
+-----BEGIN PRIVATE KEY-----
+(contenido de keepcoding.key)
+-----END PRIVATE KEY-----
+&lt;/key&gt;
+&lt;tls-auth&gt;
+-----BEGIN OpenVPN Static key V1-----
+(contenido de ta.key)
+-----END OpenVPN Static key V1-----
+&lt;/tls-auth&gt;</code></pre>
+<p>Las rutas a los archivos son:</p>
+<ul>
+<li><code>~/openvpn-ca/pki/ca.rt</code></li>
+<li><code>~/openvpn-ca/pki/issued/keepcoding.crt</code></li>
+<li><code>~/openvpn-ca/pki/private/keepcoding.key</code></li>
+<li><code>~/openvpn-ca/pki/ta.key</code></li>
+</ul>
+<p>Guarda el archivo, si todo esta correcto, puedes usarlo con un cliente de OpenVPN.</p>
+<figure>
+<img src="screenshots/openvpn.png" alt="" /><figcaption>openVPN lanzado</figcaption>
+</figure>
+<h2 id="rsync">Rsync</h2>
+<h3 id="instalacion-rsync">Instalacion rsync</h3>
+<p>Instalamos los paquetes necesarios:</p>
+<div class="sourceCode" id="cb82"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true"></a><span class="fu">sudo</span> apt-get install rsync</span></code></pre></div>
+<p>Crea el siguiente script:</p>
+<div class="sourceCode" id="cb83"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb83-2"><a href="#cb83-2" aria-hidden="true"></a></span>
+<span id="cb83-3"><a href="#cb83-3" aria-hidden="true"></a><span class="co"># Configuración de variables</span></span>
+<span id="cb83-4"><a href="#cb83-4" aria-hidden="true"></a><span class="va">ORIGEN=</span><span class="st">&quot;usuario@&lt;IP origen&gt;:/var/www/&quot;</span></span>
+<span id="cb83-5"><a href="#cb83-5" aria-hidden="true"></a><span class="va">DESTINO=</span><span class="st">&quot;/backup/www/&quot;</span></span>
+<span id="cb83-6"><a href="#cb83-6" aria-hidden="true"></a><span class="va">LOGFILE=</span><span class="st">&quot;/var/log/rsync-backup.log&quot;</span></span>
+<span id="cb83-7"><a href="#cb83-7" aria-hidden="true"></a></span>
+<span id="cb83-8"><a href="#cb83-8" aria-hidden="true"></a><span class="co"># Ejecutar rsync</span></span>
+<span id="cb83-9"><a href="#cb83-9" aria-hidden="true"></a><span class="fu">rsync</span> -avz <span class="va">$ORIGEN</span> <span class="va">$DESTINO</span> <span class="op">&gt;&gt;</span> <span class="va">$LOGFILE</span> <span class="op">2&gt;&amp;1</span></span>
+<span id="cb83-10"><a href="#cb83-10" aria-hidden="true"></a></span>
+<span id="cb83-11"><a href="#cb83-11" aria-hidden="true"></a><span class="co"># Registrar la fecha y hora de la copia de seguridad</span></span>
+<span id="cb83-12"><a href="#cb83-12" aria-hidden="true"></a><span class="bu">echo</span> <span class="st">&quot;Backup realizado en: </span><span class="va">$(</span><span class="fu">date</span><span class="va">)</span><span class="st">&quot;</span> <span class="op">&gt;&gt;</span> <span class="va">$LOGFILE</span></span></code></pre></div>
+<p>Guarda el script en <code>/usr/local/bin/rsync-backup.sh</code> y dale permisos de ejecución:</p>
+<div class="sourceCode" id="cb84"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true"></a><span class="fu">sudo</span> chmod +x /usr/local/bin/rsync-backup.sh</span></code></pre></div>
+<p>Crea un archivo de log en <code>/var/log/rsync-backup.log</code>:</p>
+<div class="sourceCode" id="cb85"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true"></a><span class="fu">sudo</span> touch /var/log/rsync-backup.log</span></code></pre></div>
+<p>Prueba a ejecutar el script:</p>
+<div class="sourceCode" id="cb86"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true"></a><span class="fu">sudo</span> /usr/local/bin/rsync-backup.sh</span></code></pre></div>
+<h3 id="programar-copias-de-seguridad">Programar copias de seguridad</h3>
+<p>Vamos a editar crontab:</p>
+<div class="sourceCode" id="cb87"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true"></a><span class="ex">crontab</span> -e</span></code></pre></div>
+<p>Añade la siguiente línea al final del archivo:</p>
+<div class="sourceCode" id="cb88"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true"></a><span class="ex">0</span> 3 * * * root /usr/local/bin/rsync-backup.sh</span></code></pre></div>
+<p>Guarda los cambios y cierra el editor. Con esta configuración, la copia de seguridad se realizará todos los días a las 3:00 AM.</p>
+<p>Los datos en crontab se dividen en 6 campos:</p>
+<ol type="1">
+<li>Minuto (0-59)</li>
+<li>Hora (0-23)</li>
+<li>Día del mes (1-31)</li>
+<li>Mes (1-12)</li>
+<li>Día de la semana (0-7, donde 0 y 7 son domingo)</li>
+<li>Comando a ejecutar</li>
+</ol>
+<p>En la siguiente captura se puede ver el script en funcionamiento y el cron programado:</p>
+<figure>
+<img src="screenshots/servicios.png" alt="" /><figcaption>Rsync</figcaption>
+</figure>

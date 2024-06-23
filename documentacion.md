@@ -296,7 +296,7 @@ Añade tu ip con el nombre de dominio que quieras usar:
 
 Además, debes abrir los puertos en tu router para poder acceder a la web desde fuera de tu red local:
 
-![Redireccion de puertos](screenshots/redireccion_puertos.png)
+![Redireccion de puertos 1](screenshots/redireccion_puertos.png)
 
 ## Samba
 
@@ -688,18 +688,17 @@ sudo systemctl start nagios
 
 ### Acceso a nagios
 
-En tu navegador, entra en `http://<ip_servidor>/nagios`
-
-![nagios](screenshots/nagios.png)
+En tu navegador, entra en `http://<ip_servidor>/nagios`.
 
 ### Configurar autenticación
+
+![](screenshots/nagios.png)
+
+Añade tu contraseña para el usuario "nagiosadmin":
 
 ```bash
 sudo htpasswd -c /usr/local/nagios/etc/htpasswd.users nagiosadmin
 ```
-
-Añade tu contraseña y ya puedes acceder a nagios con tu usuario y contraseña:
-
 
 ## OVPN
 
@@ -721,9 +720,7 @@ Asegúrate de abrir el puerto que has elegido en tu firewall:
 sudo ufw allow 1194/udp
 ```
 
-Y también deberás abrirlo en tu router para poder acceder desde fuera de tu red local:
-
-![Redireccion de puertos](screenshots/redireccion_puertos.png)
+Y también deberás abrirlo en tu router para poder acceder desde fuera de tu red local como se muestra en la [configuración de apache](#configurar-apache).
 
 ### Configuración manual
 

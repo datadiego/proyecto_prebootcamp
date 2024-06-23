@@ -14,3 +14,9 @@ pre{
     padding: 1rem;
     margin: 1rem 0;
 }
+
+img{
+    width: 50%;
+    height: auto;
+    margin: 1rem 0;
+}
