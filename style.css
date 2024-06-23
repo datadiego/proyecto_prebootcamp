@@ -11,12 +11,10 @@ h2{
 pre{
     background-color: #333;
     color: hotpink;
-    padding: 1rem;
-    margin: 1rem 0;
 }
 
 img{
-    width: 50%;
+    width: 100%;
     height: auto;
     margin: 1rem 0;
 }
